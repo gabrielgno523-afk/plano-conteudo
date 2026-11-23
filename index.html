@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><script src="https://myhub.ia.br/canvas-vendor/tailwind.js"></script>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de conteúdo — Paula Marini Beachwear</title>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f7f4ef; color: #2a2a2a; font-size: 14px; }
@@ -10,6 +11,7 @@
   header h1 { margin: 0 0 4px; font-size: 20px; }
   header p { margin: 0; opacity: .85; font-size: 13px; }
   main { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .status { font-size: 12px; color: #fff; opacity: .9; margin-top: 8px; min-height: 16px; }
   .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   .stat { background: #fff; border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #555; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
   .stat b { color: #1F3A5F; font-size: 15px; margin-right: 4px; }
@@ -79,6 +81,7 @@
 <header>
   <h1>Plano de conteúdo — Paula Marini Beachwear</h1>
   <p>Dezembro de 2026 · Moda praia, moda fitness e peças sob medida</p>
+  <div class="status" id="status"></div>
 </header>
 
 <main>
@@ -89,7 +92,7 @@
 
   <details class="backup">
     <summary>Salvar e restaurar o plano</summary>
-    <p>Clique em "Gerar backup", copie o texto e guarde-o em um arquivo no seu computador. Para restaurar depois, cole o texto aqui e clique em "Restaurar".</p>
+    <p>O plano é salvo automaticamente na planilha. Use esta área apenas para gerar uma cópia de segurança em texto ou restaurar uma cópia anterior.</p>
     <textarea id="backupTxt" placeholder="O backup aparece aqui, ou cole um backup salvo para restaurar"></textarea>
     <div class="row">
       <button class="btn" id="genBtn">Gerar backup</button>
@@ -100,6 +103,9 @@
 </main>
 
 <script>
+// Endereço do Apps Script (termina em /exec)
+const URL_API = 'https://script.google.com/macros/s/AKfycbxok3ZAvM57NBTxennHSy409FPl4cz2gtErcQTGxx6Lg4NK_FZLBfZLz7WnmUsO5Jq1ww/exec';
+
 const weeks = [
   { nome: "Semana 1", ini: 1, fim: 7 },
   { nome: "Semana 2", ini: 8, fim: 14 },
@@ -110,7 +116,6 @@ const weeks = [
 const TAGS = ["Apresentação","Anúncio","Enquete","Caixa de perguntas","Quiz","Processo","Bastidores","Produto","Depoimento","Dica","CTA","Natal","Retrospectiva","Agradecimento"];
 const RECS = ["Nenhum","Enquete","Caixa de perguntas","Quiz","Link/CTA"];
 
-// Detalhes padrão por tipo de story (todos editáveis depois)
 const TIPOS = {
   "Apresentação": { rec: "Nenhum", obj: "Apresentar a marca e o momento da semana", visual: "Foto da marca ou peça em destaque, com texto curto na tela", cta: "Convide a seguir o perfil" },
   "Anúncio": { rec: "Nenhum", obj: "Gerar expectativa para uma novidade", visual: "Arte com data ou chamada, com contagem regressiva", cta: "Peça para ativar o aviso de novidades" },
@@ -183,6 +188,7 @@ let days = raw.map(d => ({
 let doneSet = new Set();
 let openSet = new Set();
 let curDay = 1;
+let pronto = false; // só salva depois de carregar a planilha, para não gravar o plano padrão por cima
 
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const tagClass = tag => "t-" + tag.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "");
@@ -307,7 +313,60 @@ function renderStats() {
     <div class="stat"><b>${links}</b>links de inspiração</div>`;
 }
 
-function refresh() { renderStats(); renderWeeks(); renderDays(); renderDay(); }
+// ---------- Planilha (Google Sheets via Apps Script) ----------
+
+const statusEl = document.getElementById("status");
+function setStatus(t) { statusEl.textContent = t; }
+
+// Carrega o plano da planilha ao abrir a página
+async function carregarDaNuvem() {
+  setStatus("Carregando da planilha...");
+  try {
+    const r = await fetch(URL_API);
+    const data = await r.json();
+    if (Array.isArray(data.dias) && data.dias.length) {
+      days = data.dias;
+      doneSet = new Set(data.feitos || []);
+    }
+    pronto = true;
+    desenhar();
+    setStatus("Plano carregado da planilha.");
+  } catch (err) {
+    setStatus("Não foi possível carregar da planilha. Alterações não serão salvas até recarregar a página.");
+    desenhar();
+  }
+}
+
+// Salva na planilha 800 ms após a última alteração
+let timer;
+function salvarNaNuvem() {
+  if (!pronto) return;
+  setStatus("Salvando...");
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    try {
+      await fetch(URL_API, {
+        method: "POST",
+        body: JSON.stringify({ dias: days, feitos: [...doneSet] })
+      });
+      setStatus("Salvo na planilha.");
+    } catch (err) {
+      setStatus("Erro ao salvar na planilha. Verifique a conexão.");
+    }
+  }, 800);
+}
+
+// ---------- Renderização e eventos ----------
+
+function desenhar() {
+  renderStats(); renderWeeks(); renderDays(); renderDay();
+}
+
+// Redesenha e salva (só após o carregamento inicial)
+function refresh() {
+  desenhar();
+  salvarNaNuvem();
+}
 
 // Edição de campos de texto (sem re-renderizar, para não perder o foco)
 const panel = document.getElementById("day");
@@ -315,7 +374,10 @@ panel.addEventListener("input", e => {
   const t = e.target;
   if (!t.dataset.k || t.tagName === "SELECT") return;
   const item = getItem(findDay(+t.dataset.d), t.dataset.i);
-  if (item) item[t.dataset.k] = t.value;
+  if (item) {
+    item[t.dataset.k] = t.value;
+    salvarNaNuvem();
+  }
 });
 
 // Selects e campos que mudam estrutura (tipo, recurso, formato)
@@ -327,7 +389,6 @@ panel.addEventListener("change", e => {
   item[t.dataset.k] = t.value;
   if (t.tagName === "SELECT") {
     if (t.dataset.k === "tag") {
-      // Ao trocar o tipo, aplica os detalhes padrão desse tipo
       const base = TIPOS[t.value] || TIPOS["Dica"];
       Object.assign(item, { rec: base.rec, obj: base.obj, visual: base.visual, cta: base.cta });
     }
@@ -335,6 +396,8 @@ panel.addEventListener("change", e => {
       item.roteiro = ROTEIRO[t.value];
     }
     refresh();
+  } else {
+    salvarNaNuvem();
   }
 });
 
@@ -386,20 +449,20 @@ document.getElementById("weeks").addEventListener("click", e => {
   const b = e.target.closest("[data-week]");
   if (!b) return;
   curDay = weeks[+b.dataset.week].ini;
-  refresh();
+  desenhar();
 });
 document.getElementById("days").addEventListener("click", e => {
   const b = e.target.closest("[data-day]");
   if (!b) return;
   curDay = +b.dataset.day;
-  refresh();
+  desenhar();
 });
 
-// Backup: gera e restaura o plano em texto (sem armazenamento do navegador)
+// Backup: gera e restaura o plano em texto
 const backupTxt = document.getElementById("backupTxt");
 const msg = document.getElementById("msg");
 document.getElementById("genBtn").addEventListener("click", () => {
-  backupTxt.value = JSON.stringify({ plano: "plano-conteudo-dezembro-2026", dias: days, feitos: [...doneSet] });
+  backupTxt.value = JSON.stringify({ plano: "plano-conteudo-dezembro-2026", dias: days, feitos: [...doneSet] }, null, 2);
   msg.textContent = "Backup gerado. Copie o texto e guarde-o.";
 });
 document.getElementById("restoreBtn").addEventListener("click", () => {
@@ -416,7 +479,9 @@ document.getElementById("restoreBtn").addEventListener("click", () => {
   }
 });
 
-refresh();
+// Início: mostra o plano padrão enquanto carrega da planilha
+desenhar();
+carregarDaNuvem();
 </script>
 </body>
 </html>
