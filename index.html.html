@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><script src="https://myhub.ia.br/canvas-vendor/tailwind.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f7f4ef; color: #2a2a2a; font-size: 14px; }
+  header { background: #1F3A5F; color: #fff; padding: 20px 24px; }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header p { margin: 0; opacity: .85; font-size: 13px; }
+  main { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .stat { background: #fff; border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #555; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .stat b { color: #1F3A5F; font-size: 15px; margin-right: 4px; }
+  .weeks { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .wbtn { border: 1px solid #1F3A5F; background: #fff; color: #1F3A5F; padding: 7px 14px; border-radius: 999px; cursor: pointer; font-size: 13px; }
+  .wbtn.active { background: #1F3A5F; color: #fff; }
+  .days { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .dbtn { width: 58px; border: 1px solid #ddd; background: #fff; border-radius: 10px; padding: 6px 4px; cursor: pointer; text-align: center; font-size: 11px; color: #555; }
+  .dbtn b { display: block; font-size: 16px; color: #1F3A5F; }
+  .dbtn.active { border-color: #E8A33D; background: #fdf6ea; }
+  .dbtn.done { background: #eef6ee; }
+  .day { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .dayhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 14px; }
+  .dayhead h2 { margin: 0; font-size: 18px; text-transform: capitalize; color: #1F3A5F; }
+  .dayhead p { margin: 2px 0 0; font-size: 12px; color: #888; }
+  .sec { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #B5452E; margin: 18px 0 8px; }
+  .btn { border: 1px solid #1F3A5F; background: #1F3A5F; color: #fff; border-radius: 8px; padding: 7px 12px; font-size: 13px; cursor: pointer; }
+  .btn.ghost { background: #fff; color: #1F3A5F; }
+  .btn.small { padding: 4px 9px; font-size: 12px; }
+  .day.done .dayhead h2 { color: #5B7F3A; }
+  .stories { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+  .story { border: 1px solid #e8e8e8; border-radius: 10px; background: #fff; }
+  .story summary { cursor: pointer; padding: 10px 12px; display: flex; gap: 10px; align-items: center; list-style: none; }
+  .story summary::-webkit-details-marker { display: none; }
+  .story summary::after { content: "▾"; margin-left: auto; color: #999; }
+  .story[open] summary::after { content: "▴"; }
+  .stxt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rec { font-size: 11px; background: #eef3fa; color: #1F3A5F; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+  .sbody { padding: 0 12px 12px; border-top: 1px dashed #eee; padding-top: 10px; }
+  .tag { flex-shrink: 0; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 6px; color: #fff; background: #888; white-space: nowrap; }
+  .t-apresentacao, .t-anuncio { background: #1F3A5F; }
+  .t-enquete { background: #7B5EA7; }
+  .t-caixadeperguntas { background: #2E8B8B; }
+  .t-quiz { background: #C0504D; }
+  .t-cta { background: #E8A33D; }
+  .t-processo, .t-bastidores { background: #5B7F3A; }
+  .t-produto { background: #3B6EA8; }
+  .t-depoimento { background: #A05A8C; }
+  .t-dica { background: #6B6B6B; }
+  .t-natal, .t-retrospectiva, .t-agradecimento { background: #B5452E; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .lbl { display: block; font-size: 11px; font-weight: 700; color: #777; margin: 10px 0 3px; text-transform: uppercase; letter-spacing: .03em; }
+  .txt, .cmt, select, input[type=time] { width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 6px 8px; font-size: 13px; font-family: inherit; background: #fff; }
+  .cmt { min-height: 50px; resize: vertical; }
+  .feedbox { border: 1px solid #f0dcb8; background: #fdf6ea; border-radius: 10px; padding: 12px; }
+  .feedbox .cmt { min-height: 70px; }
+  .x { border: none; background: transparent; color: #999; font-size: 12px; cursor: pointer; padding: 2px 4px; }
+  .x:hover { color: #C0504D; }
+  .rowend { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 8px; }
+  .links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; background: #eef3fa; border-radius: 999px; padding: 3px 8px; font-size: 12px; max-width: 100%; }
+  .chip a { color: #1F3A5F; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+  .addlink { display: flex; gap: 6px; margin-top: 6px; }
+  .addlink input { flex: 1; font-size: 12px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 6px; }
+  .addlink button { font-size: 12px; border: 1px solid #1F3A5F; color: #1F3A5F; background: #fff; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .empty { font-size: 13px; color: #777; background: #fafafa; border: 1px dashed #ddd; border-radius: 10px; padding: 12px; }
+  .backup { margin-top: 20px; background: #fff; border-radius: 12px; padding: 14px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .backup summary { cursor: pointer; font-weight: 700; color: #1F3A5F; }
+  .backup p { font-size: 12px; color: #666; margin: 10px 0; }
+  .backup textarea { width: 100%; min-height: 110px; border: 1px solid #ddd; border-radius: 6px; padding: 8px; font-family: monospace; font-size: 12px; }
+  .backup .row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  .msg { font-size: 12px; color: #5B7F3A; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } main { padding: 10px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Plano de conteúdo — Paula Marini Beachwear</h1>
+  <p>Dezembro de 2026 · Moda praia, moda fitness e peças sob medida</p>
+</header>
+
+<main>
+  <div class="stats" id="stats"></div>
+  <div class="weeks" id="weeks"></div>
+  <div class="days" id="days"></div>
+  <div id="day"></div>
+
+  <details class="backup">
+    <summary>Salvar e restaurar o plano</summary>
+    <p>Clique em "Gerar backup", copie o texto e guarde-o em um arquivo no seu computador. Para restaurar depois, cole o texto aqui e clique em "Restaurar".</p>
+    <textarea id="backupTxt" placeholder="O backup aparece aqui, ou cole um backup salvo para restaurar"></textarea>
+    <div class="row">
+      <button class="btn" id="genBtn">Gerar backup</button>
+      <button class="btn ghost" id="restoreBtn">Restaurar</button>
+      <span class="msg" id="msg"></span>
+    </div>
+  </details>
+</main>
+
+<script>
+const weeks = [
+  { nome: "Semana 1", ini: 1, fim: 7 },
+  { nome: "Semana 2", ini: 8, fim: 14 },
+  { nome: "Semana 3", ini: 15, fim: 21 },
+  { nome: "Semana 4", ini: 22, fim: 30 }
+];
+
+const TAGS = ["Apresentação","Anúncio","Enquete","Caixa de perguntas","Quiz","Processo","Bastidores","Produto","Depoimento","Dica","CTA","Natal","Retrospectiva","Agradecimento"];
+const RECS = ["Nenhum","Enquete","Caixa de perguntas","Quiz","Link/CTA"];
+
+// Detalhes padrão por tipo de story (todos editáveis depois)
+const TIPOS = {
+  "Apresentação": { rec: "Nenhum", obj: "Apresentar a marca e o momento da semana", visual: "Foto da marca ou peça em destaque, com texto curto na tela", cta: "Convide a seguir o perfil" },
+  "Anúncio": { rec: "Nenhum", obj: "Gerar expectativa para uma novidade", visual: "Arte com data ou chamada, com contagem regressiva", cta: "Peça para ativar o aviso de novidades" },
+  "Enquete": { rec: "Enquete", obj: "Entender a preferência do público", visual: "Duas opções lado a lado, com nomes curtos", cta: "Vote e comente o que mais gostou" },
+  "Caixa de perguntas": { rec: "Caixa de perguntas", obj: "Captar dúvidas e temas para novos conteúdos", visual: "Foto de peça ou cliente com a pergunta em destaque", cta: "Envie sua pergunta pela caixa" },
+  "Quiz": { rec: "Quiz", obj: "Engajar e direcionar para a peça ideal", visual: "Três opções com imagens e uma pergunta curta", cta: "Veja o resultado e chame no direct" },
+  "Processo": { rec: "Nenhum", obj: "Mostrar o cuidado do sob medida", visual: "Sequência de fotos das etapas, com legenda em cada uma", cta: "Chame no direct para começar a sua" },
+  "Bastidores": { rec: "Nenhum", obj: "Humanizar a marca e mostrar a rotina do ateliê", visual: "Vídeo curto ou foto espontânea do ateliê", cta: "Responda se quer ver mais bastidores" },
+  "Produto": { rec: "Link/CTA", obj: "Apresentar a peça e o caimento", visual: "Close da peça com boa luz natural", cta: "Chame no direct para consultar" },
+  "Depoimento": { rec: "Nenhum", obj: "Gerar confiança com prova social", visual: "Foto da cliente usando a peça (com autorização)", cta: "Peça o seu no direct" },
+  "Dica": { rec: "Nenhum", obj: "Gerar valor e salvamentos", visual: "Texto em 3 passos sobre fundo liso", cta: "Salve este story" },
+  "CTA": { rec: "Link/CTA", obj: "Converter em contato", visual: "Peça em destaque com figurinha de link", cta: "Chame no direct agora" },
+  "Natal": { rec: "Nenhum", obj: "Fortalecer o vínculo com a comunidade", visual: "Arte festiva com a identidade da marca", cta: "Compartilhe com alguém especial" },
+  "Retrospectiva": { rec: "Nenhum", obj: "Relembrar as melhores peças do mês", visual: "Colagem das peças mais vistas", cta: "Conte qual foi sua favorita" },
+  "Agradecimento": { rec: "Nenhum", obj: "Agradecer quem acompanha a marca", visual: "Foto do ateliê ou de uma cliente, com texto simples", cta: "Compartilhe com uma amiga" }
+};
+
+const ROTEIRO = {
+  Carrossel: "Slide 1: capa com o tema\nSlide 2: dúvida ou problema\nSlide 3: etapa ou solução\nSlide 4: detalhe da peça\nSlide 5: chamada para o direct",
+  Reel: "0-3s: gancho com a peça ou o processo\n3-10s: desenvolvimento (corte, costura ou uso)\n10-15s: resultado final\n15-20s: chamada para o direct"
+};
+
+const raw = [
+  { n: 1, s: [["Apresentação","Quem é a Paula Marini Beachwear: moda praia e fitness sob medida."],["Enquete","Você prefere biquíni, maiô ou conjunto fitness?"],["Processo","Mostre a escolha do tecido, da cor e do caimento."],["Produto","Peça de destaque da coleção em close."],["Caixa de perguntas","O que você gostaria de criar sob medida?"],["CTA","Chame no direct para uma consulta de medidas."]], f: null },
+  { n: 2, s: [["Bastidores","Mesa de corte ou máquina em funcionamento."],["Quiz","Qual modelo combina com seu estilo: A, B ou C?"],["Dica","3 cuidados para o tecido de banho durar mais."],["Produto","Peça fitness em uso ou no cabide, com boa luz."],["Enquete","Próxima cor da coleção: opção 1 ou 2?"],["CTA","Salve este story para consultar depois."]], f: null },
+  { n: 3, s: [["Anúncio","Hoje tem o processo completo do sob medida. Fique de olho!"],["Processo","Como são tiradas as medidas, passo a passo."],["Enquete","Você já usou roupa sob medida? Sim ou não."],["Produto","Detalhe de acabamento ou costura."],["Caixa de perguntas","Tem dúvida sobre medidas? Envie aqui."],["CTA","Deslize o carrossel e comente sua peça favorita."]], f: ["Carrossel","Do desenho à peça: como funciona o sob medida","Mostrar as etapas: medidas, escolha de tecido, modelagem, costura e entrega.","Você escolhe cada detalhe da sua peça. Quer criar a sua? Chame no direct e comece pela medida. 💛 #modapraia #sobmedida"] },
+  { n: 4, s: [["Depoimento","Cliente usando a peça (com autorização)."],["Produto","Três opções de cor da mesma peça."],["Quiz","Descubra seu tipo de modelagem ideal."],["Dica","Como escolher o tamanho certo pela medida."],["Enquete","Você usaria a peça na praia ou na academia?"],["CTA","Responda 'quero' para receber o guia de medidas."]], f: null },
+  { n: 5, s: [["Bastidores","Rotina de separação de pedidos."],["Produto","Conjunto fitness em movimento."],["Caixa de perguntas","Qual treino você pratica?"],["Dica","Quando o sob medida vale a pena?"],["Enquete","Prefere estampa ou lisa?"],["CTA","Marque alguém que ama moda praia."]], f: null },
+  { n: 6, s: [["Anúncio","Assista ao reel e conte se você gostou!"],["Enquete","Você assistiria ao vídeo completo do processo?"],["Bastidores","Do corte à costura, em poucos segundos."],["Produto","Peça final pronta para usar."],["Caixa de perguntas","Quer ver mais do processo? Responda aqui."],["CTA","Compartilhe com alguém que gosta de moda praia."]], f: ["Reel","Medimos, desenhamos, costuramos","Vídeo de 15 a 20 s: medida, corte, costura e look final.","Do jeito que você quer, do começo ao fim. Chame no direct e comece a sua. 🌊 #sobmedida #modafitness"] },
+  { n: 7, s: [["Bastidores","Chegada de tecidos novos."],["Enquete","Qual textura você quer: lisa, canelada ou estampada?"],["Produto","Peça com recorte ou detalhe diferente."],["Dica","Como cuidar da peça para a praia."],["Caixa de perguntas","Qual sua dúvida sobre o sob medida?"],["CTA","Chame no direct para consultar prazo."]], f: null },
+  { n: 8, s: [["Apresentação","Semana de escolha: o que criar sob medida?"],["Enquete","Biquíni, maiô ou top fitness?"],["Processo","Escolha do tecido: toque, peso e cor."],["Produto","Close de caimento em modelo."],["Quiz","Qual tecido combina com você: A, B ou C?"],["CTA","Chame no direct para uma consulta."]], f: null },
+  { n: 9, s: [["Bastidores","Costura em andamento."],["Dica","Como medir busto e quadril corretamente."],["Enquete","Alça fina ou larga?"],["Produto","Peça fitness em treino."],["Caixa de perguntas","Qual modelagem você quer conhecer?"],["CTA","Salve para fazer suas medidas."]], f: null },
+  { n: 10, s: [["Anúncio","Carrossel novo: moda praia para cada corpo."],["Processo","As modelagens disponíveis."],["Enquete","Qual modelagem você usa mais?"],["Produto","Detalhe de elástico ou acabamento."],["Caixa de perguntas","Qual corte você quer ver?"],["CTA","Deslize e comente sua modelagem."]], f: ["Carrossel","Moda praia para cada corpo: modelagens","Mostrar 4 modelagens com caimento e indicação de uso.","Seu corpo, sua modelagem. Qual você escolheria? Comente e chame no direct. 💛 #modapraia #sobmedida"] },
+  { n: 11, s: [["Depoimento","Cliente com a peça favorita (autorizado)."],["Produto","Conjunto fitness em três cores."],["Dica","Três dicas para escolher o look de praia."],["Enquete","Qual acessório combina mais?"],["Bastidores","Escolha de aviamentos: botões e fivelas."],["CTA","Responda 'sob medida' para falar com a equipe."]], f: null },
+  { n: 12, s: [["Bastidores","Chegada ou separação de encomendas."],["Quiz","Qual look é seu: praia, treino ou dia a dia?"],["Produto","Peça em cabide com luz natural."],["Caixa de perguntas","Quer ver mais peças? Diga qual."],["Enquete","Estampa floral ou geométrica?"],["CTA","Marque quem vai à praia com você."]], f: null },
+  { n: 13, s: [["Anúncio","Reel de look de treino sob medida."],["Enquete","Você quer ver mais looks fitness?"],["Bastidores","Do corte à peça pronta, em 30 segundos."],["Produto","Look de treino em movimento."],["Caixa de perguntas","Qual treino você faz?"],["CTA","Salve o reel para se inspirar."]], f: ["Reel","Look de treino sob medida em 30 segundos","Corte rápido: medida, costura e look em movimento.","Treinar com conforto e estilo. Monte o seu sob medida! Chame no direct. 🏋️ #modafitness #sobmedida"] },
+  { n: 14, s: [["Apresentação","Resumo da semana e o que vem por aí."],["Enquete","O que você quer ver na próxima semana?"],["Produto","Peça da semana em destaque."],["Dica","Como escolher a cor do seu look."],["Caixa de perguntas","Qual sua dúvida da semana?"],["CTA","Chame no direct e peça uma consulta."]], f: null },
+  { n: 15, s: [["Depoimento","Cliente comentando o caimento (autorizado)."],["Processo","Ajuste de medida na prova."],["Enquete","Você prefere ajuste ou peça pronta?"],["Produto","Detalhe de costura reforçada."],["Caixa de perguntas","Como é a prova da sua peça?"],["CTA","Marque uma amiga para o próximo look."]], f: null },
+  { n: 16, s: [["Bastidores","Mesa de corte e tecidos organizados."],["Quiz","Qual cor combina com você?"],["Dica","Como lavar a peça sob medida."],["Produto","Maiô em close."],["Enquete","Cor escura ou clara para a praia?"],["CTA","Salve para a próxima compra."]], f: null },
+  { n: 17, s: [["Anúncio","Carrossel de antes e depois de um pedido."],["Processo","Ideia inicial do pedido."],["Processo","A peça pronta."],["Enquete","Qual resultado você prefere?"],["Caixa de perguntas","Quer ver outro caso?"],["CTA","Chame no direct para o seu."]], f: ["Carrossel","Antes e depois de um pedido sob medida","Mostrar a ideia inicial e a peça pronta de uma cliente (com autorização).","De ideia a peça pronta. Quer transformar a sua? Chame no direct. ✨ #sobmedida #modapraia"] },
+  { n: 18, s: [["Produto","Conjunto fitness em estampa nova."],["Dica","Como escolher o tecido para treino."],["Enquete","Qual tecido você usa mais?"],["Bastidores","Revisão da peça antes do envio."],["Caixa de perguntas","Quais dúvidas você tem sobre tecidos?"],["CTA","Responda 'quero' para o guia de tecidos."]], f: null },
+  { n: 19, s: [["Depoimento","Cliente de praia (autorizado)."],["Produto","Biquíni em três modelos."],["Quiz","Qual biquíni é o seu estilo?"],["Dica","Cuidados para praia e piscina."],["Enquete","Praia ou piscina no fim de semana?"],["CTA","Marque quem quer um look igual."]], f: null },
+  { n: 20, s: [["Anúncio","Reel de bastidores do ateliê."],["Enquete","Você quer ver mais bastidores?"],["Bastidores","A rotina do ateliê em 20 segundos."],["Produto","Peça final no cabide."],["Caixa de perguntas","O que você quer ver no ateliê?"],["CTA","Compartilhe com quem ama moda."]], f: ["Reel","Bastidores do ateliê","Corte de 20 s mostrando corte, costura e acabamento.","Um pouco da rotina por trás de cada peça. Quer a sua? Chame no direct. 🧵 #bastidores #sobmedida"] },
+  { n: 21, s: [["Apresentação","Resumo da semana e novidades."],["Enquete","Próxima peça: praia ou fitness?"],["Produto","Peça da semana em destaque."],["Dica","Como medir corretamente."],["Caixa de perguntas","Dúvida da semana?"],["CTA","Chame no direct para consulta."]], f: null },
+  { n: 22, s: [["Apresentação","Semana de tendências para o verão."],["Enquete","Qual tendência você quer usar?"],["Produto","Peça de tendência."],["Quiz","Qual é a sua tendência de verão?"],["Dica","Como combinar cores."],["CTA","Chame no direct para encomendar."]], f: null },
+  { n: 23, s: [["Bastidores","Preparação dos tecidos."],["Processo","Escolha da modelagem."],["Enquete","Modelagem alta ou baixa?"],["Produto","Maiô em close."],["Caixa de perguntas","Qual modelagem você quer ver?"],["CTA","Salve para consultar depois."]], f: null },
+  { n: 24, s: [["Anúncio","Carrossel: guia de tecidos."],["Processo","Tecidos para praia."],["Processo","Tecidos para treino."],["Enquete","Qual você usa mais?"],["Caixa de perguntas","Quer outro guia?"],["CTA","Chame no direct."]], f: ["Carrossel","Guia de tecidos: praia x treino","Comparar tecidos para praia e para treino, com indicação de uso.","Qual tecido escolher? Salve o guia e chame no direct para montar a sua peça. 💛 #sobmedida #modafitness"] },
+  { n: 25, s: [["Natal","Mensagem de Natal da equipe."],["Depoimento","Cliente de treino (autorizado)."],["Produto","Conjunto fitness em movimento."],["Dica","Como escolher o look de treino."],["Enquete","Top ou regata?"],["CTA","Responda 'treino' para uma consulta."]], f: null },
+  { n: 26, s: [["Bastidores","Ateliê com peças prontas."],["Quiz","Qual look é seu para o fim de ano?"],["Produto","Look de praia para festas."],["Caixa de perguntas","Para qual ocasião você quer a peça?"],["Enquete","Praia ou fim de ano?"],["CTA","Marque uma amiga."]], f: null },
+  { n: 27, s: [["Anúncio","Reel do look completo de uma cliente."],["Enquete","Você quer ver mais looks completos?"],["Bastidores","Do pedido ao look final."],["Produto","Look completo em movimento."],["Caixa de perguntas","Qual look você quer ver?"],["CTA","Compartilhe com amigas."]], f: ["Reel","Cliente final: o look completo","Vídeo com a peça sob medida usada pela cliente (com autorização).","Do pedido ao look final, do jeito que você imaginou. 💛 #sobmedida #modapraia"] },
+  { n: 28, s: [["Apresentação","Resumo da semana."],["Enquete","Qual look você quer agora?"],["Produto","Peça da semana."],["Dica","Como escolher o tamanho certo."],["Caixa de perguntas","Qual é a sua dúvida?"],["CTA","Chame no direct."]], f: null },
+  { n: 29, s: [["Bastidores","Preparação para o fim do mês."],["Enquete","Qual foi o melhor conteúdo do mês?"],["Depoimento","Cliente feliz com a peça (autorizado)."],["Produto","Peça destaque do mês."],["Caixa de perguntas","O que você quer ver em janeiro?"],["CTA","Chame no direct."]], f: null },
+  { n: 30, s: [["Retrospectiva","Melhores peças e looks do mês."],["Enquete","Praia ou fitness em janeiro?"],["Agradecimento","Obrigada por acompanhar!"],["Produto","Peça de destaque."],["Caixa de perguntas","Conte o que quer ver mais."],["CTA","Chame no direct para encomendar."]], f: null }
+];
+
+function makeStory(tag, text) {
+  const t = TIPOS[tag] || TIPOS["Dica"];
+  return { tag, text, rec: t.rec, obj: t.obj, visual: t.visual, cta: t.cta, comment: "", links: [] };
+}
+function makeFeed(f) {
+  return { fmt: f[0], tema: f[1], ideia: f[2], roteiro: ROTEIRO[f[0]], legenda: f[3], horario: "19:00", comment: "", links: [] };
+}
+
+let days = raw.map(d => ({
+  n: d.n,
+  note: "",
+  s: d.s.map(([tag, text]) => makeStory(tag, text)),
+  f: d.f ? makeFeed(d.f) : null
+}));
+let doneSet = new Set();
+let openSet = new Set();
+let curDay = 1;
+
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const tagClass = tag => "t-" + tag.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "");
+const findDay = n => days.find(d => d.n === n);
+const getItem = (day, i) => i === "day" ? day : i === "f" ? day.f : day.s[+i];
+const dateLabel = n => new Date(2026, 11, n).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+const shortLabel = n => new Date(2026, 11, n).toLocaleDateString("pt-BR", { weekday: "short" });
+const weekIndex = n => weeks.findIndex(w => n >= w.ini && n <= w.fim);
+
+function extrasHTML(day, i, item) {
+  const links = item.links.map((u, j) =>
+    `<span class="chip"><a href="${esc(u)}" target="_blank" rel="noopener noreferrer">🔗 ${esc(u.replace(/^https?:\/\//i, "").slice(0, 45))}</a><button class="x" data-act="rmlink" data-d="${day.n}" data-i="${i}" data-j="${j}" title="Remover">✕</button></span>`
+  ).join("");
+  return `
+    <label class="lbl">Comentário</label>
+    <textarea class="cmt" data-k="comment" data-d="${day.n}" data-i="${i}" placeholder="Observação ou ajuste">${esc(item.comment)}</textarea>
+    <label class="lbl">Links de inspiração</label>
+    <div class="links">${links}</div>
+    <div class="addlink"><input type="text" placeholder="Cole um link (Instagram, Pinterest...)"><button data-act="addlink" data-d="${day.n}" data-i="${i}">+ Link</button></div>`;
+}
+
+function storyHTML(d, j, s) {
+  const key = `${d.n}-${j}`;
+  const tagOpts = TAGS.map(t => `<option ${t === s.tag ? "selected" : ""}>${t}</option>`).join("");
+  const recOpts = RECS.map(r => `<option ${r === s.rec ? "selected" : ""}>${r}</option>`).join("");
+  return `<details class="story" data-key="${key}" ${openSet.has(key) ? "open" : ""}>
+    <summary>
+      <span class="tag ${tagClass(s.tag)}">${esc(s.tag)}</span>
+      <span class="stxt">${esc(s.text) || "<em>sem texto</em>"}</span>
+      ${s.rec !== "Nenhum" ? `<span class="rec">${esc(s.rec)}</span>` : ""}
+    </summary>
+    <div class="sbody">
+      <div class="grid2">
+        <div><label class="lbl">Tipo</label><select data-k="tag" data-d="${d.n}" data-i="${j}">${tagOpts}</select></div>
+        <div><label class="lbl">Recurso interativo</label><select data-k="rec" data-d="${d.n}" data-i="${j}">${recOpts}</select></div>
+      </div>
+      <label class="lbl">Ideia do story</label>
+      <input type="text" class="txt" data-k="text" data-d="${d.n}" data-i="${j}" value="${esc(s.text)}">
+      <label class="lbl">Objetivo</label>
+      <input type="text" class="txt" data-k="obj" data-d="${d.n}" data-i="${j}" value="${esc(s.obj)}">
+      <label class="lbl">Visual / roteiro</label>
+      <textarea class="cmt" data-k="visual" data-d="${d.n}" data-i="${j}">${esc(s.visual)}</textarea>
+      <label class="lbl">Chamada para ação</label>
+      <input type="text" class="txt" data-k="cta" data-d="${d.n}" data-i="${j}" value="${esc(s.cta)}">
+      ${extrasHTML(d, j, s)}
+      <div class="rowend"><span></span><button class="x" data-act="rmstory" data-d="${d.n}" data-i="${j}">Remover story</button></div>
+    </div>
+  </details>`;
+}
+
+function feedHTML(d, f) {
+  const fmtOpts = ["Carrossel", "Reel"].map(x => `<option ${x === f.fmt ? "selected" : ""}>${x}</option>`).join("");
+  return `<div class="feedbox">
+    <div class="grid2">
+      <div><label class="lbl">Formato</label><select data-k="fmt" data-d="${d.n}" data-i="f">${fmtOpts}</select></div>
+      <div><label class="lbl">Horário sugerido</label><input type="time" data-k="horario" data-d="${d.n}" data-i="f" value="${esc(f.horario)}"></div>
+    </div>
+    <label class="lbl">Tema</label>
+    <input type="text" class="txt" data-k="tema" data-d="${d.n}" data-i="f" value="${esc(f.tema)}">
+    <label class="lbl">Ideia principal</label>
+    <textarea class="cmt" data-k="ideia" data-d="${d.n}" data-i="f">${esc(f.ideia)}</textarea>
+    <label class="lbl">Roteiro (${f.fmt === "Reel" ? "cenas" : "slides"})</label>
+    <textarea class="cmt" style="min-height:90px" data-k="roteiro" data-d="${d.n}" data-i="f">${esc(f.roteiro)}</textarea>
+    <label class="lbl">Legenda e CTA</label>
+    <textarea class="cmt" style="min-height:70px" data-k="legenda" data-d="${d.n}" data-i="f">${esc(f.legenda)}</textarea>
+    ${extrasHTML(d, "f", f)}
+    <div class="rowend"><span></span><button class="x" data-act="rmfeed" data-d="${d.n}">Remover publicação</button></div>
+  </div>`;
+}
+
+function renderDay() {
+  const d = findDay(curDay);
+  const isDone = doneSet.has(d.n);
+  const feed = d.f ? feedHTML(d, d.f)
+    : `<div class="empty">Sem carrossel ou Reel neste dia. <button class="btn small ghost" data-act="addfeed" data-d="${d.n}">+ Adicionar publicação do feed</button></div>`;
+  document.getElementById("day").innerHTML = `<article class="day ${isDone ? "done" : ""}">
+    <div class="dayhead">
+      <div><h2>${dateLabel(d.n)}</h2><p>${weeks[weekIndex(d.n)].nome} · ${d.s.length} stories${d.f ? " + 1 feed" : ""}</p></div>
+      <button class="btn ${isDone ? "" : "ghost"}" data-act="done" data-d="${d.n}">${isDone ? "✓ Dia concluído" : "Marcar dia como concluído"}</button>
+    </div>
+    <h3 class="sec">Stories</h3>
+    <div class="stories">${d.s.map((s, j) => storyHTML(d, j, s)).join("")}</div>
+    <button class="btn small ghost" data-act="addstory" data-d="${d.n}">+ Adicionar story</button>
+    <h3 class="sec">Feed</h3>
+    ${feed}
+    <label class="lbl">Observações do dia</label>
+    <textarea class="cmt" data-k="note" data-d="${d.n}" data-i="day">${esc(d.note)}</textarea>
+  </article>`;
+}
+
+function renderWeeks() {
+  const cw = weekIndex(curDay);
+  document.getElementById("weeks").innerHTML = weeks.map((w, i) =>
+    `<button class="wbtn ${i === cw ? "active" : ""}" data-week="${i}">${w.nome} (${w.ini}–${w.fim})</button>`
+  ).join("");
+}
+
+function renderDays() {
+  const w = weeks[weekIndex(curDay)];
+  let html = "";
+  for (let n = w.ini; n <= w.fim; n++) {
+    const d = findDay(n);
+    html += `<button class="dbtn ${n === curDay ? "active" : ""} ${doneSet.has(n) ? "done" : ""}" data-day="${n}">
+      <span>${shortLabel(n)}</span><b>${n}</b>${d.f ? (d.f.fmt === "Reel" ? "Reel" : "Carrossel") : "&nbsp;"}
+    </button>`;
+  }
+  document.getElementById("days").innerHTML = html;
+}
+
+function renderStats() {
+  let stories = 0, carrosseis = 0, reels = 0, links = 0;
+  days.forEach(d => {
+    stories += d.s.length;
+    d.s.forEach(s => links += s.links.length);
+    if (d.f) { d.f.fmt === "Reel" ? reels++ : carrosseis++; links += d.f.links.length; }
+  });
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><b>${doneSet.size}/${days.length}</b>dias concluídos</div>
+    <div class="stat"><b>${stories}</b>stories</div>
+    <div class="stat"><b>${carrosseis}</b>carrosséis</div>
+    <div class="stat"><b>${reels}</b>reels</div>
+    <div class="stat"><b>${links}</b>links de inspiração</div>`;
+}
+
+function refresh() { renderStats(); renderWeeks(); renderDays(); renderDay(); }
+
+// Edição de campos de texto (sem re-renderizar, para não perder o foco)
+const panel = document.getElementById("day");
+panel.addEventListener("input", e => {
+  const t = e.target;
+  if (!t.dataset.k || t.tagName === "SELECT") return;
+  const item = getItem(findDay(+t.dataset.d), t.dataset.i);
+  if (item) item[t.dataset.k] = t.value;
+});
+
+// Selects e campos que mudam estrutura (tipo, recurso, formato)
+panel.addEventListener("change", e => {
+  const t = e.target;
+  if (!t.dataset.k) return;
+  const item = getItem(findDay(+t.dataset.d), t.dataset.i);
+  if (!item) return;
+  item[t.dataset.k] = t.value;
+  if (t.tagName === "SELECT") {
+    if (t.dataset.k === "tag") {
+      // Ao trocar o tipo, aplica os detalhes padrão desse tipo
+      const base = TIPOS[t.value] || TIPOS["Dica"];
+      Object.assign(item, { rec: base.rec, obj: base.obj, visual: base.visual, cta: base.cta });
+    }
+    if (t.dataset.k === "fmt") {
+      item.roteiro = ROTEIRO[t.value];
+    }
+    refresh();
+  }
+});
+
+// Mantém em memória quais stories estão abertos
+panel.addEventListener("toggle", e => {
+  const key = e.target.dataset && e.target.dataset.key;
+  if (!key) return;
+  e.target.open ? openSet.add(key) : openSet.delete(key);
+}, true);
+
+// Ações
+panel.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  const day = findDay(+b.dataset.d);
+  switch (b.dataset.act) {
+    case "done":
+      doneSet.has(day.n) ? doneSet.delete(day.n) : doneSet.add(day.n);
+      break;
+    case "addstory":
+      day.s.push(makeStory("Dica", ""));
+      openSet.add(`${day.n}-${day.s.length - 1}`);
+      break;
+    case "rmstory":
+      day.s.splice(+b.dataset.i, 1);
+      break;
+    case "addfeed":
+      day.f = makeFeed(["Carrossel", "", "", ""]);
+      break;
+    case "rmfeed":
+      day.f = null;
+      break;
+    case "addlink": {
+      let v = b.previousElementSibling.value.trim();
+      if (!v) return;
+      if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+      getItem(day, b.dataset.i).links.push(v);
+      break;
+    }
+    case "rmlink":
+      getItem(day, b.dataset.i).links.splice(+b.dataset.j, 1);
+      break;
+  }
+  refresh();
+});
+
+// Navegação por semana e dia
+document.getElementById("weeks").addEventListener("click", e => {
+  const b = e.target.closest("[data-week]");
+  if (!b) return;
+  curDay = weeks[+b.dataset.week].ini;
+  refresh();
+});
+document.getElementById("days").addEventListener("click", e => {
+  const b = e.target.closest("[data-day]");
+  if (!b) return;
+  curDay = +b.dataset.day;
+  refresh();
+});
+
+// Backup: gera e restaura o plano em texto (sem armazenamento do navegador)
+const backupTxt = document.getElementById("backupTxt");
+const msg = document.getElementById("msg");
+document.getElementById("genBtn").addEventListener("click", () => {
+  backupTxt.value = JSON.stringify({ plano: "plano-conteudo-dezembro-2026", dias: days, feitos: [...doneSet] });
+  msg.textContent = "Backup gerado. Copie o texto e guarde-o.";
+});
+document.getElementById("restoreBtn").addEventListener("click", () => {
+  try {
+    const data = JSON.parse(backupTxt.value);
+    if (!Array.isArray(data.dias)) throw new Error("formato");
+    days = data.dias;
+    doneSet = new Set(data.feitos || []);
+    openSet = new Set();
+    msg.textContent = "Plano restaurado.";
+    refresh();
+  } catch (err) {
+    msg.textContent = "Não foi possível restaurar: cole um backup válido.";
+  }
+});
+
+refresh();
+</script>
+</body>
+</html>
